@@ -8,7 +8,7 @@
 
 import UIKit
 
-class CheckListViewController: UITableViewController {
+class CheckListViewController: UITableViewController, AddItemViewControllerDelegate {
 
     var items: [ChecklistItem]
 
@@ -17,27 +17,27 @@ class CheckListViewController: UITableViewController {
         items = [ChecklistItem]()
         
         let row0item = ChecklistItem()
-        row0item.text = "Walk the dog"
+        row0item.text = "Body workout"
         row0item.checked = false
         items.append(row0item)
         
         let row1item = ChecklistItem()
-        row1item.text = "Brush teeth"
+        row1item.text = "Meditate"
         row1item.checked = true
         items.append(row1item)
 
         let row2item = ChecklistItem()
-        row2item.text = "Learn iOS development"
+        row2item.text = "Learn Swift"
         row2item.checked = true
         items.append(row2item)
         
         let row3item = ChecklistItem()
-        row3item.text = "Soccer practice"
+        row3item.text = "Practise HackerRank"
         row3item.checked = false
         items.append(row3item)
         
         let row4item = ChecklistItem()
-        row4item.text = "Eat ice cream"
+        row4item.text = "Travel"
         row4item.checked = true
         items.append(row4item)
         
@@ -83,32 +83,63 @@ class CheckListViewController: UITableViewController {
         }
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
-    
-    @IBAction func addItem() {
-        let newRowIndex = items.count
-        let item = ChecklistItem()
-        item.text = "I am a new row"
-        item.checked = false
-        items.append(item)
         
-        let indexPath = NSIndexPath(forRow: newRowIndex, inSection: 0)
-        let indexPaths = [indexPath]
-        tableView.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
-        
-        
-    }
-    
     func configureCheckmarkForCell(cell: UITableViewCell, withChecklistItem item: ChecklistItem) {
+        let label = cell.viewWithTag(1001) as! UILabel
+        
         if item.checked {
-            cell.accessoryType = .Checkmark
+            label.text = "√"
         } else {
-            cell.accessoryType = .None
+            label.text = ""
         }
     }
     
     func configureTextForCell(cell: UITableViewCell, withChecklistItem item: ChecklistItem) {
         let label = cell.viewWithTag(1000) as! UILabel
         label.text = item.text
+    }
+    
+    func addItemViewControllerDidCancel(controller: AddItemViewController) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func addItemViewController(controller: AddItemViewController, didFinishAddingItem item: ChecklistItem) {
+        
+        let newRowIndex = items.count
+        items.append(item)
+        
+        let indexPath = NSIndexPath(forRow: newRowIndex, inSection: 0)
+        let indexPaths = [indexPath]
+        tableView.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func addItemViewController(controller: AddItemViewController, didFinishEditingItem item:ChecklistItem) {
+        
+        if let index = items.indexOf(item) {
+            let indexPath = NSIndexPath(forRow: index, inSection: 0)
+            if let cell = tableView.cellForRowAtIndexPath(indexPath) {
+                configureTextForCell(cell, withChecklistItem: item)
+            }
+        }
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "AddItem" {
+            
+            let navigationController = segue.destinationViewController as! UINavigationController
+            let controller = navigationController.topViewController as! AddItemViewController
+            controller.delegate = self
+        } else if segue.identifier == "EditItem" {
+            let navigationController = segue.destinationViewController as! UINavigationController
+            let controller = navigationController.topViewController as! AddItemViewController
+            controller.delegate = self
+            
+            if let indexPath = tableView.indexPathForCell(sender as! UITableViewCell) {
+                controller.itemToEdit = items[indexPath.row]
+            }
+        }
     }
 }
 
